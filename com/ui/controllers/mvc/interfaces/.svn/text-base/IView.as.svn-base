@@ -1,0 +1,10 @@
+package net.interalia.etnia.ui.mvc.interfaces {
+
+	import com.etnia.interfaces.ISprite;
+
+	public interface IView extends ISprite {
+
+		function destructor():void;
+
+	}
+}

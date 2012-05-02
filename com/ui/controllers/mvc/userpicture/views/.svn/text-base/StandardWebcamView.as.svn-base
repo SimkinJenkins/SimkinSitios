@@ -1,0 +1,250 @@
+package net.interalia.etnia.ui.mvc.userpicture.views {
+
+	import com.etnia.utils.GraphicUtils;
+	
+	import flash.display.DisplayObject;
+	import flash.display.DisplayObjectContainer;
+	import flash.display.InteractiveObject;
+	import flash.display.MovieClip;
+	import flash.display.Sprite;
+	import flash.events.Event;
+	import flash.events.MouseEvent;
+	import flash.geom.Point;
+	import flash.media.Video;
+	
+	import net.interalia.etnia.ui.mvc.BasicFormStates;
+	import net.interalia.etnia.ui.mvc.interfaces.IController;
+	import net.interalia.etnia.ui.mvc.interfaces.IModel;
+	import net.interalia.etnia.ui.mvc.interfaces.IView;
+	import net.interalia.etnia.ui.mvc.webcam.BasicWebcamStates;
+	import net.interalia.etnia.ui.mvc.webcam.BasicWebcamView;
+
+	public class StandardWebcamView extends BasicWebcamView implements IView {
+
+		protected var _preview:Sprite;
+		protected var _previewMask:Sprite;
+		protected var _webCamContainerPosition:Point;
+		protected var _webCamPreviewPosition:Point;
+		
+		public function set webCamContainerPosition($value:Point):void {
+			_webCamContainerPosition = $value;
+		}
+		
+		public function set webCamPreviewPosition($value:Point):void {
+			if($value) {
+				_webCamPreviewPosition = $value;
+			}
+		}
+		
+		public function set previewMask($value:Sprite):void {
+			_previewMask = $value;
+		}
+
+		public function set preview($value:Sprite):void {
+			if($value) {
+				_preview = $value;
+				if(_previewMask){
+//					_preview.mask = _previewMask;
+					if(!_previewMask.parent) {
+						addElement(_previewMask, true, _preview);
+					}
+				}else{
+					_preview.mask = getMask();
+				}
+				addElement(_preview);
+				_preview.x = _webCamPreviewPosition.x;
+				_preview.y = _webCamPreviewPosition.y;
+			}
+		}
+
+		override protected function get cancelButton():InteractiveObject {
+			return graphicMC.cancelButton;
+		}
+
+		override protected function get finishButton():InteractiveObject {
+			return graphicMC.finishButton;
+		}
+
+		override protected function get captureImageButton():InteractiveObject {
+			return graphicMC.captureImageButton;
+		}
+
+		protected function get videoMask():DisplayObject {
+			return graphicMC.videoMask;
+		}
+
+		protected function get videoContainer():DisplayObjectContainer {
+			return graphicMC.videoContainer;
+		}
+
+		protected function get backText():InteractiveObject {
+			return graphicMC.backText;
+		}
+
+		protected function get backButton():InteractiveObject {
+			return graphicMC.backButton;
+		}
+
+		protected function get webcamConfButton():InteractiveObject {
+			return graphicMC.webcamButton;
+		}
+
+		protected function get privacyButton():InteractiveObject {
+			return graphicMC.privacyButton;
+		}
+
+		public function StandardWebcamView($model:IModel, $controller:IController=null, $graphic:Sprite=null) {
+			super($model, $controller, $graphic);
+		}
+
+		public function init():void {
+			formController.clickHandler(getButtonID(startButton));
+		}
+
+		override public function destructor():void {
+			addButtonListeners(false);
+			if(_preview) {
+				_preview.mask = null;
+				addElement(_preview, false);
+			}
+			super.destructor();
+			addListener(_model, Event.CHANGE, stateUpdate, false);
+		}
+
+		override protected function initialize():void {
+			_webCamContainerPosition = new Point();
+			_webCamPreviewPosition = new Point(100, 100);
+			super.initialize();
+		}
+
+		override protected function initGraphic():void {
+			addButtonListeners();
+		}
+
+		override protected function addVideo($video:Video, $add:Boolean = true):void {
+			if(_preview) {
+				$video.x = _webCamContainerPosition.x;
+				$video.y = _webCamContainerPosition.y;
+				if(_preview as MovieClip) {
+					addElement($video, $add, (_preview as MovieClip).content);
+				} else {
+					addElement($video, $add, _preview);
+				}
+			} else if(videoContainer) {
+				$video.width = videoContainer.width + 36;
+				$video.height = videoContainer.height;
+				$video.x = 0;
+				$video.y = 0;
+				if(videoMask) {
+					videoContainer.mask = videoMask;
+				}
+				addElement($video, $add, videoContainer);
+			} else {
+				addElement($video, $add);
+				$video.x = _webCamContainerPosition.x;
+				$video.y = _webCamContainerPosition.y;
+			}
+			if(_previewMask){
+				$video.mask = _previewMask;
+			}
+			$video.visible = $add;
+		}
+
+		override protected function onCaptureAgain():void {
+			super.onCaptureAgain();
+			if(_preview) {
+				addElement(wcModel.capturedImage, false, (_preview as MovieClip).content);
+			} else if(videoContainer) {
+				addElement(wcModel.capturedImage, false, videoContainer);
+			} else {
+				addElement(wcModel.capturedImage, false);
+			}	
+			if(_previewMask){
+				wcModel.capturedImage.mask = _previewMask;
+			}else{
+				wcModel.capturedImage.mask = null;
+			}
+			addVideo(_video);
+		}
+
+		override protected function onImageCaptured():void {
+			super.onImageCaptured();
+			_video.visible = false;
+			if(_preview) {
+				wcModel.capturedImage.x = _webCamContainerPosition.x;
+				wcModel.capturedImage.y = _webCamContainerPosition.y;
+				if(_preview as MovieClip) {
+					addElement(wcModel.capturedImage, true, (_preview as MovieClip).content);
+				} else {
+					addElement(wcModel.capturedImage, true, _preview);
+				}
+				if(_previewMask){
+					wcModel.capturedImage.mask = _previewMask;
+				}else{
+					wcModel.capturedImage.mask = (_preview as MovieClip).content._mask;
+				}
+			} else if(videoContainer) {
+				wcModel.capturedImage.x = 0;
+				wcModel.capturedImage.width = _video.width;
+				wcModel.capturedImage.height = _video.height;
+				addElement(wcModel.capturedImage, true, videoContainer);
+				if(_previewMask){
+					videoContainer.mask = _previewMask;
+				}else{
+					videoContainer.mask = videoMask;
+				}
+			} else {
+				addElement(wcModel.capturedImage);
+				wcModel.capturedImage.x = _webCamContainerPosition.x;
+				wcModel.capturedImage.y = _webCamContainerPosition.y;
+			}
+		}
+
+		override protected function getButtonID($button:InteractiveObject):String {
+			switch($button) {
+				case backButton:			return BasicFormStates.ON_CANCEL_BTN;
+				case webcamConfButton:		return BasicWebcamStates.ON_CAMERA_SETTINGS;
+				case privacyButton:			return BasicWebcamStates.ON_PRIVACY_SETTINGS;
+			}
+			return super.getButtonID($button);
+		}
+
+		override protected function showCaptureMenu($add:Boolean = true):void {
+			super.showCaptureMenu($add);
+		}
+
+		override protected function showFinishMenu($add:Boolean = true):void {
+			super.showFinishMenu($add);
+			addElement(cancelButton, !$add);
+			addElement(backText, $add);
+			addElement(backButton, $add);
+		}
+
+		override protected function showVideo($add:Boolean = true):void {
+			super.showVideo($add);
+		}
+
+		override protected function onCaptureRequest($event:MouseEvent):void {
+			_video.mask = null;
+			super.onCaptureRequest($event);
+		}
+
+		protected function getMask():Sprite {
+			var sprite:Sprite = new Sprite();
+			sprite.graphics.beginFill(0);
+			sprite.graphics.drawRect(100, 350, 350, 548);
+			sprite.graphics.endFill();
+			return sprite;
+		}
+
+		protected function addButtonListeners($add:Boolean = true):void {
+			addListener(backButton, MouseEvent.CLICK, clickHandler, $add);
+			addListener(finishButton, MouseEvent.CLICK, clickHandler, $add);
+			addListener(cancelButton, MouseEvent.CLICK, clickHandler, $add);
+			addListener(captureImageButton, MouseEvent.CLICK, onCaptureRequest, $add);
+			addListener(privacyButton, MouseEvent.CLICK, clickHandler, $add);
+			addListener(webcamConfButton, MouseEvent.CLICK, clickHandler, $add);
+		}
+
+	}
+}

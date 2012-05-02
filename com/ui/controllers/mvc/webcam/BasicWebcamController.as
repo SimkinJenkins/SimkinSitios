@@ -1,0 +1,279 @@
+package com.ui.controllers.mvc.webcam {
+
+	import com.ui.controllers.mvc.BasicFormStates;
+	import com.ui.controllers.mvc.controllers.BasicMVCFormController;
+	import com.ui.controllers.mvc.interfaces.IFormController;
+	import com.ui.controllers.mvc.interfaces.IModel;
+	import com.utils.SettingsUtils;
+	
+	import flash.display.Bitmap;
+	import flash.events.ErrorEvent;
+	import flash.events.Event;
+	import flash.events.IEventDispatcher;
+	import flash.events.IOErrorEvent;
+	import flash.events.NetStatusEvent;
+	import flash.events.SecurityErrorEvent;
+	import flash.events.StatusEvent;
+	import flash.media.Camera;
+	import flash.media.Microphone;
+	import flash.net.NetConnection;
+	import flash.net.NetStream;
+	import flash.system.Capabilities;
+	import flash.system.SecurityPanel;
+	
+	public class BasicWebcamController extends BasicMVCFormController implements IFormController {
+
+		protected var _connection:NetConnection;
+		protected var _streaming:NetStream;
+		protected var _mic:Microphone;
+
+		protected function get modelW():BasicWebcamModel {
+			return _model as BasicWebcamModel;
+		}
+
+		public function BasicWebcamController($model:IModel) {
+			super($model);
+		}
+
+		override public function clickHandler($ID:String):void {
+			super.clickHandler($ID);
+			switch($ID) {
+				case BasicWebcamStates.ON_CAMERA_STARTING:		startCamera();								break;
+				case BasicWebcamStates.ON_CAMERA_SETTINGS:		showSettings(SecurityPanel.CAMERA);			break;
+				case BasicWebcamStates.ON_PRIVACY_SETTINGS:		showSettings(SecurityPanel.PRIVACY);		break;
+			}
+		}
+
+		public function setCaptureImage($image:Bitmap):void {
+			modelW.capturedImage = $image;
+		}
+
+		override public function destructor():void {
+			destructConnection();
+			modelW.useCamera = false;
+			super.destructor();
+		}
+
+		override protected function onCancelRequest():void {
+			if(modelW.capturedImage) {
+				modelW.setState(BasicWebcamStates.ON_CAPTURE_AGAIN);
+				modelW.capturedImage = null;
+			} else {
+				super.onCancelRequest();
+			}
+		}
+
+		protected function showSettings($panel:String):void {
+			SettingsUtils.getInstance().showSettings($panel);
+			addListener(SettingsUtils.getInstance(), SettingsUtils.ON_PANEL_CLOSE, onSettingsPanelClose);
+		}
+
+		protected function onSettingsPanelClose($event:Event):void {
+			addListener(SettingsUtils.getInstance(), SettingsUtils.ON_PANEL_CLOSE, onSettingsPanelClose, false);
+			destructConnection();
+			modelW.useCamera = false;
+			destructCamera();
+			startCamera();
+		}
+
+        protected function startCamera():void {
+	        if(!modelW.useCamera) {
+		        modelW.useCamera = true;
+		        initializeConnection();
+	        } else {
+	        	try {
+	        		if(_connection && _connection.connected) {
+	        			initializeCamera( modelW.videoWidth,  modelW.videoHeight, modelW.fps);
+	        		}
+	        	} catch($error: ErrorEvent) {
+	        		initializeConnection();
+	        	}
+	        }
+        }
+
+        /**
+         * Establece la conexión
+         */
+        protected function initializeConnection():void {
+        	trace("Estableciendo conexión: " + modelW.serverURL);
+		    _connection = new NetConnection();
+		    _connection.client = this;
+		    createConnectionListeners(_connection);
+		    _connection.connect(modelW.serverURL);
+        }
+
+        /**
+         * Crea/remove los listeners de la conexión
+         * @param $create
+         */
+        protected function createConnectionListeners($netConnection:NetConnection, $add:Boolean = true):void {
+        	addListener($netConnection, NetStatusEvent.NET_STATUS, netStatusConnectionHandler, $add);
+        	addListener($netConnection, IOErrorEvent.IO_ERROR, netStatusConnectionHandler, $add);
+        	addListener($netConnection, SecurityErrorEvent.SECURITY_ERROR, netStatusConnectionHandler, $add);
+        }
+
+        /**
+         * Respuesta del servidor
+         * @param $event
+         */        
+        protected function netStatusConnectionHandler($event: NetStatusEvent):void {
+        	switch ($event.info.code) {
+        		case "NetConnection.Connect.Success":		trace("Conexión establecida.");
+															connectStreaming();
+															initializeCamera(modelW.videoWidth, modelW.videoHeight, modelW.fps);	break;
+        		case "NetConnection.Connect.Failed":
+        		case "NetConnection.Connect.Rejected":		trace($event.info.code);
+										        			onConnectionError();  								break;
+        		case "NetConnection.Connect.Closed":		onCameraDestroyed();								break;
+        		default:					       			trace("netStatusConnectionHandler: " + $event.info.code);
+            }
+        }
+
+        /**
+         * Error en la conexión
+         * @param $event
+         */
+        protected function ioErrorConnectionHandler($event:IOErrorEvent):void {
+			onConnectionError();
+		}
+        /**
+         * Error de seguridad
+         * @param $event
+         */
+        protected function securityErrorConnectionHandler($event:SecurityErrorEvent):void {
+			onConnectionError();
+        }
+
+		protected function onConnectionError():void {
+			createConnectionListeners(_connection, false);
+			_model.setError(BasicWebcamStates.ON_CONNECTION_ERROR);
+			_model.setState(BasicFormStates.CANCELING);
+		}
+
+		protected function onCameraDestroyed():void {
+//			_model.setState(BasicWebcamStates.ON_CAMERA_DESTROY_FINISH);
+		}
+
+        /**
+         * Realiza la conección del streaming
+         */        
+        protected function connectStreaming():void {
+		    _streaming = new NetStream(_connection);
+		    _streaming.bufferTime = 8;
+		    createStreamingListeners(true);
+			_streaming.client = this;
+			_model.setState(BasicWebcamStates.ON_CONNECTION_READY);
+        }
+
+	    protected function createStreamingListeners($add:Boolean = true):void {
+	    	addListener(_streaming, NetStatusEvent.NET_STATUS, onStreamStatus, $add);
+	    	addListener(_streaming, IOErrorEvent.IO_ERROR, onIOError, $add);
+	    }
+	    
+		protected function onStreamStatus($event:NetStatusEvent):void {
+			switch($event.info.code) {
+				case "NetStream.Publish.BadName":
+				case "NetStream.Record.Stop":
+				case "NetStream.Buffer.Flush":			trace($event.info.code); 								break;
+				case "NetStream.Publish.Start":			_model.setState(BasicWebcamStates.ON_RECORD_START);		break;
+				case "NetStream.Unpublish.Success":		_model.setState(BasicWebcamStates.ON_RECORD_STOP);		break;
+				case "NetStream.Play.Start":			_model.setState(BasicWebcamStates.ON_PLAYER_START);		break;
+				case "NetStream.Play.Stop":				_model.setState(BasicWebcamStates.ON_PLAYER_STOP);		break;
+				default:								trace($event.info.code);								break;
+            }
+        }
+        
+        protected function onIOError($event:IOErrorEvent):void {
+            onConnectionError();
+        }
+
+        /**
+    	 * Inicializa la camara
+    	 * @param $videoWidth
+    	 * @param $videoHight
+    	 * @param $fps
+    	 */
+        protected function initializeCamera($videoWidth:uint, $videoHight:Number, $fps:uint):void {
+        	if(Capabilities.os.indexOf("Mac")>-1){
+				modelW.webCamera = Camera.getCamera("2");
+        	} else {
+        		modelW.webCamera = Camera.getCamera();
+        	}
+       		if(!modelW.webCamera) {
+       			_model.setError(BasicWebcamStates.ON_CAMERA_ERROR);
+       			return;
+       		}
+		    modelW.webCamera.setMode(modelW.videoWidth, modelW.videoHeight, modelW.fps);
+		    modelW.webCamera.setQuality(0, modelW.videoQuality);
+//			if(modelW.webCamera.muted) {
+//				trace("Encendiendo la camara.");
+//				addListener(modelW.webCamera, StatusEvent.STATUS, statusWebCameraHandler);
+//			} else {
+      			trace("Acceso a la camara.");
+				connectedCamera();
+//   			}
+        }
+
+        protected function connectedCamera():void {
+        	trace("Iniciando camara");
+        	if(modelW.micEnabled) {
+	        	_mic = Microphone.getMicrophone();
+				createStatusListener(_mic);
+				_streaming.attachAudio(_mic);
+        	}
+			createStatusListener(modelW.webCamera);
+			_model.setState(BasicWebcamStates.ON_CAMERA_READY);
+        }
+
+		protected function createStatusListener($dispatcher:IEventDispatcher, $add:Boolean = true):void {
+			addListener($dispatcher, StatusEvent.STATUS, statusHandler, $add);
+		}
+
+        protected function statusWebCameraHandler($event:StatusEvent):void {
+        	trace(" ::: " + $event.code);
+        	switch($event.code) {
+        		case "Camera.Unmuted":
+					createStatusListener(modelW.webCamera, false);
+        			connectedCamera();
+        			break;
+        		case "Camera.Muted":
+        			destructConnection();
+        			destructCamera();
+					modelW.useCamera = false;
+					_model.setState(BasicWebcamStates.ON_CAMERA_REJECTED);
+        			break;
+        		default:		trace("statusWebCameraHandler:" + $event.code);			break;
+        	}
+        }
+
+		protected function statusHandler($event:StatusEvent):void {
+			trace($event.code);
+    	}
+
+        /**
+         * Cierra la conexión
+         */        
+        protected function destructConnection():void {
+        	if(_connection != null) {
+        		if(_connection.connected) {
+        			_streaming.close();
+        			createStreamingListeners(false);
+	        		_streaming = null;
+        		}
+	        	_connection.close();
+	        	createConnectionListeners(_connection, false);
+	        	_connection = null;
+        	}
+        }
+
+		protected function destructCamera():void {
+			if(modelW.webCamera != null) {
+				createStatusListener(modelW.webCamera, false);
+        		createStatusListener(_mic, false);
+        		modelW.webCamera = null;
+        		_mic = null;
+        	}
+        }
+
+	}
+}

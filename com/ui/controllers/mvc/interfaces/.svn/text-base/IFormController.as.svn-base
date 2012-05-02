@@ -1,0 +1,9 @@
+package net.interalia.etnia.ui.mvc.interfaces {
+
+	public interface IFormController extends IController {
+
+		function clickHandler($ID:String):void;
+		function destructor():void;
+
+	}
+}

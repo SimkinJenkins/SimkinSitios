@@ -1,0 +1,22 @@
+package net.interalia.etnia.ui.mvc.controllers {
+
+	import com.etnia.events.BasicEventDispatcher;
+
+	import net.interalia.etnia.ui.mvc.interfaces.IController;
+	import net.interalia.etnia.ui.mvc.interfaces.IModel;
+
+	public class BasicMVCController extends BasicEventDispatcher implements IController {
+
+		protected var _model:IModel;
+
+		public function BasicMVCController($model:IModel) {
+			super();
+			_model = $model;
+			initialize();
+		}
+
+		public function destructor():void {}
+
+		protected function initialize():void {}
+	}
+}

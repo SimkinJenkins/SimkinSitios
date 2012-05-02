@@ -50,20 +50,21 @@ package com.ui.controllers {
 		 * @param $add			Indica si el evento va a ser añadido o removido.
 		 * 
 		 */
-		protected function addListener($dispatcher:IEventDispatcher, $type:String, $listener:Function, $add:Boolean = true):void {
+		protected function addListener($dispatcher:IEventDispatcher, $type:String, $callback:Function, $add:Boolean = true, $force:Boolean = false):void {
 			if(!$dispatcher) {
 				return;
 			}
 			if($add) {
-//				if(!$dispatcher.hasEventListener($type)) {
-				$dispatcher.addEventListener($type, $listener);
-//				}
+				if(!$dispatcher.hasEventListener($type) || $force) {
+					$dispatcher.addEventListener($type, $callback);
+				}
 			} else {
 				if($dispatcher.hasEventListener($type)) {
-					$dispatcher.removeEventListener($type, $listener);
+					$dispatcher.removeEventListener($type, $callback);
 				}
 			}
 		}
+
 		/**
 		 *  Añade un elemento (addChild) al MovieClip controlado (_container),
 		 * o a un $container:DisplayObjectContainerproporcionado.

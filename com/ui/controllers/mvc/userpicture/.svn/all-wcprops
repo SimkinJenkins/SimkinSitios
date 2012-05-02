@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/diseno/sitiokomx/!svn/ver/4735/version4.0.0/src/net/interalia/etnia/ui/mvc/userpicture
+END
+MultipleFileReferenceController.as
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/diseno/sitiokomx/!svn/ver/3555/version4.0.0/src/net/interalia/etnia/ui/mvc/userpicture/MultipleFileReferenceController.as
+END
+BasicFileReferenceModel.as
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/diseno/sitiokomx/!svn/ver/2933/version4.0.0/src/net/interalia/etnia/ui/mvc/userpicture/BasicFileReferenceModel.as
+END
+BasicFileReferenceStates.as
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/diseno/sitiokomx/!svn/ver/2385/version4.0.0/src/net/interalia/etnia/ui/mvc/userpicture/BasicFileReferenceStates.as
+END
+MultipleUserPicturePickerController.as
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/diseno/sitiokomx/!svn/ver/3527/version4.0.0/src/net/interalia/etnia/ui/mvc/userpicture/MultipleUserPicturePickerController.as
+END
+BasicFileReferenceView.as
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/diseno/sitiokomx/!svn/ver/3915/version4.0.0/src/net/interalia/etnia/ui/mvc/userpicture/BasicFileReferenceView.as
+END
+UserPicturePickerStates.as
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/diseno/sitiokomx/!svn/ver/3477/version4.0.0/src/net/interalia/etnia/ui/mvc/userpicture/UserPicturePickerStates.as
+END
