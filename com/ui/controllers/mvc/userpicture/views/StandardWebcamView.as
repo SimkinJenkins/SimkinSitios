@@ -33,7 +33,7 @@ package com.ui.controllers.mvc.userpicture.views {
 				_webCamPreviewPosition = $value;
 			}
 		}
-		
+
 		public function set previewMask($value:Sprite):void {
 			_previewMask = $value;
 		}
@@ -96,8 +96,10 @@ package com.ui.controllers.mvc.userpicture.views {
 		}
 
 		public function init():void {
-			formController.clickHandler(getButtonID(startButton));
+			formController.clickHandler(BasicWebcamStates.ON_CAMERA_STARTING);
 		}
+
+		override protected function addGraphic($add:Boolean = true):void {}
 
 		override public function destructor():void {
 			addButtonListeners(false);
@@ -120,6 +122,8 @@ package com.ui.controllers.mvc.userpicture.views {
 		}
 
 		override protected function addVideo($video:Video, $add:Boolean = true):void {
+			super.addVideo($video, $add);
+			return;
 			if(_preview) {
 				$video.x = _webCamContainerPosition.x;
 				$video.y = _webCamContainerPosition.y;
@@ -166,6 +170,8 @@ package com.ui.controllers.mvc.userpicture.views {
 		}
 
 		override protected function onImageCaptured():void {
+			formController.clickHandler(BasicFormStates.ON_FINISH_BTN);
+			return;
 			super.onImageCaptured();
 			_video.visible = false;
 			if(_preview) {

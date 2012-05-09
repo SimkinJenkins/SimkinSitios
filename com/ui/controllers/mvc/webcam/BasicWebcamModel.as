@@ -1,13 +1,18 @@
 package com.ui.controllers.mvc.webcam {
 
+	import com.ui.controllers.mvc.BasicFormStates;
 	import com.ui.controllers.mvc.interfaces.IModel;
 	import com.ui.controllers.mvc.models.BasicModel;
+	import com.utils.graphics.DisplayContainer;
 	
 	import flash.display.Bitmap;
+	import flash.display.DisplayObjectContainer;
+	import flash.display.Sprite;
 	import flash.media.Camera;
 	
 	public class BasicWebcamModel extends BasicModel implements IModel {
 
+		protected var _videoContainer:DisplayObjectContainer;
     	protected var _serverURL:String = null;
     	protected var _fileName:String = null;
     	protected var _capturedImage:Bitmap;
@@ -20,10 +25,19 @@ package com.ui.controllers.mvc.webcam {
 		protected var _videoQuality:Number = 90;
 		protected var _webCamera:Camera;
 
+		public function set videoContainer($value:DisplayObjectContainer):void {
+			_videoContainer = $value;
+		}
+		
+		public function get videoContainer():DisplayObjectContainer {
+			return _videoContainer;
+		}
+
 		public function set capturedImage($value:Bitmap):void {
 			_capturedImage = $value;
 			if($value) {
 				setState(BasicWebcamStates.ON_IMAGE_CAPTURED);
+				setState(BasicFormStates.FINISHING);
 			}
 		}
 

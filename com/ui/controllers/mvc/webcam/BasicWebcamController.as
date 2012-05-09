@@ -205,14 +205,11 @@ package com.ui.controllers.mvc.webcam {
        		}
 		    modelW.webCamera.setMode(modelW.videoWidth, modelW.videoHeight, modelW.fps);
 		    modelW.webCamera.setQuality(0, modelW.videoQuality);
-//			if(modelW.webCamera.muted) {
-//				trace("Encendiendo la camara.");
-//				addListener(modelW.webCamera, StatusEvent.STATUS, statusWebCameraHandler);
-//			} else {
-      			trace("Acceso a la camara.");
-				connectedCamera();
-//   			}
-        }
+
+			trace("Acceso a la camara.");
+			connectedCamera();
+
+		}
 
         protected function connectedCamera():void {
         	trace("Iniciando camara");

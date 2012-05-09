@@ -44,9 +44,9 @@ package com.ui.controllers.mvc.webcam {
 			addListener(startButton, MouseEvent.CLICK, clickHandler, false);
 			addListener(captureImageButton, MouseEvent.CLICK, onCaptureRequest, false);
 			addElement(wcModel.capturedImage, false);
-			addElement(startButton, false);
-			showCaptureMenu(false);
-			showFinishMenu(false);
+//			addElement(startButton, false);
+//			showCaptureMenu(false);
+//			showFinishMenu(false);
 			showVideo(false);
 			destructVideo();
 			super.destructor();
@@ -132,7 +132,11 @@ package com.ui.controllers.mvc.webcam {
 		}
 
 		protected function addVideo($video:Video, $add:Boolean = true):void {
-			addElement($video, $add);
+			if(wcModel.videoContainer) {
+				addElement($video, $add, wcModel.videoContainer);
+			} else {
+				addElement($video, $add);
+			}
 		}
 
 		protected function destructVideo():void {
