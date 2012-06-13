@@ -38,23 +38,6 @@ package com.ui.controllers.mvc.userpicture.views {
 			_previewMask = $value;
 		}
 
-		public function set preview($value:Sprite):void {
-			if($value) {
-				_preview = $value;
-				if(_previewMask){
-//					_preview.mask = _previewMask;
-					if(!_previewMask.parent) {
-						addElement(_previewMask, true, _preview);
-					}
-				}else{
-					_preview.mask = getMask();
-				}
-				addElement(_preview);
-				_preview.x = _webCamPreviewPosition.x;
-				_preview.y = _webCamPreviewPosition.y;
-			}
-		}
-
 		override protected function get cancelButton():InteractiveObject {
 			return graphicMC.cancelButton;
 		}
@@ -123,33 +106,6 @@ package com.ui.controllers.mvc.userpicture.views {
 
 		override protected function addVideo($video:Video, $add:Boolean = true):void {
 			super.addVideo($video, $add);
-			return;
-			if(_preview) {
-				$video.x = _webCamContainerPosition.x;
-				$video.y = _webCamContainerPosition.y;
-				if(_preview as MovieClip) {
-					addElement($video, $add, (_preview as MovieClip).content);
-				} else {
-					addElement($video, $add, _preview);
-				}
-			} else if(videoContainer) {
-				$video.width = videoContainer.width + 36;
-				$video.height = videoContainer.height;
-				$video.x = 0;
-				$video.y = 0;
-				if(videoMask) {
-					videoContainer.mask = videoMask;
-				}
-				addElement($video, $add, videoContainer);
-			} else {
-				addElement($video, $add);
-				$video.x = _webCamContainerPosition.x;
-				$video.y = _webCamContainerPosition.y;
-			}
-			if(_previewMask){
-				$video.mask = _previewMask;
-			}
-			$video.visible = $add;
 		}
 
 		override protected function onCaptureAgain():void {
@@ -231,14 +187,6 @@ package com.ui.controllers.mvc.userpicture.views {
 		override protected function onCaptureRequest($event:MouseEvent):void {
 			_video.mask = null;
 			super.onCaptureRequest($event);
-		}
-
-		protected function getMask():Sprite {
-			var sprite:Sprite = new Sprite();
-			sprite.graphics.beginFill(0);
-			sprite.graphics.drawRect(100, 350, 350, 548);
-			sprite.graphics.endFill();
-			return sprite;
 		}
 
 		protected function addButtonListeners($add:Boolean = true):void {
