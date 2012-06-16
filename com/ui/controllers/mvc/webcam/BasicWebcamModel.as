@@ -6,6 +6,7 @@ package com.ui.controllers.mvc.webcam {
 	import com.utils.graphics.DisplayContainer;
 	
 	import flash.display.Bitmap;
+	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Sprite;
 	import flash.media.Camera;
@@ -15,7 +16,7 @@ package com.ui.controllers.mvc.webcam {
 		protected var _videoContainer:DisplayObjectContainer;
     	protected var _serverURL:String = null;
     	protected var _fileName:String = null;
-    	protected var _capturedImage:Bitmap;
+    	protected var _capturedImage:DisplayObject;
     	protected var _videoWidth:uint = 320;
     	protected var _videoHeight:uint = 240;
     	protected var _fps:uint = 12;
@@ -33,7 +34,7 @@ package com.ui.controllers.mvc.webcam {
 			return _videoContainer;
 		}
 
-		public function set capturedImage($value:Bitmap):void {
+		public function set capturedImage($value:DisplayObject):void {
 			_capturedImage = $value;
 			if($value) {
 				setState(BasicWebcamStates.ON_IMAGE_CAPTURED);
@@ -41,7 +42,7 @@ package com.ui.controllers.mvc.webcam {
 			}
 		}
 
-		public function get capturedImage():Bitmap {
+		public function get capturedImage():DisplayObject {
 			return _capturedImage;
 		}
 

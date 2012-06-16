@@ -7,6 +7,7 @@ package com.ui.controllers.mvc.webcam {
 	import com.utils.SettingsUtils;
 	
 	import flash.display.Bitmap;
+	import flash.display.DisplayObject;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
 	import flash.events.IEventDispatcher;
@@ -44,7 +45,7 @@ package com.ui.controllers.mvc.webcam {
 			}
 		}
 
-		public function setCaptureImage($image:Bitmap):void {
+		public function setCaptureImage($image:DisplayObject):void {
 			modelW.capturedImage = $image;
 		}
 
@@ -55,12 +56,12 @@ package com.ui.controllers.mvc.webcam {
 		}
 
 		override protected function onCancelRequest():void {
-			if(modelW.capturedImage) {
-				modelW.setState(BasicWebcamStates.ON_CAPTURE_AGAIN);
-				modelW.capturedImage = null;
-			} else {
+//			if(modelW.capturedImage) {
+//				modelW.setState(BasicWebcamStates.ON_CAPTURE_AGAIN);
+//				modelW.capturedImage = null;
+//			} else {
 				super.onCancelRequest();
-			}
+//			}
 		}
 
 		protected function showSettings($panel:String):void {

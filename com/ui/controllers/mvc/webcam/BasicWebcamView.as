@@ -4,6 +4,7 @@ package com.ui.controllers.mvc.webcam {
 	import com.ui.controllers.mvc.interfaces.IModel;
 	import com.ui.controllers.mvc.interfaces.IView;
 	import com.ui.controllers.mvc.views.BasicFormView;
+	import com.utils.GraphicUtils;
 	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -99,15 +100,9 @@ package com.ui.controllers.mvc.webcam {
 		}
 
 		protected function onCaptureRequest($event:MouseEvent):void {
-			var photoWidth:Number = 320;
-			var photoHeight:Number = 240;
-			var rec:Rectangle = new Rectangle(0, 0, photoWidth, photoHeight);
-			var bitmapData:BitmapData = new BitmapData(photoWidth, photoHeight);
-			bitmapData.draw(_video, null, null, null, rec, false);
-			var bitmap:Bitmap = new Bitmap(bitmapData);
-			bitmap.scaleX = -1;
-			bitmap.x = bitmap.width;
-			wcController.setCaptureImage(bitmap);
+			var photoWidth:Number = wcModel.videoWidth;
+			var photoHeight:Number = wcModel.videoHeight;
+			wcController.setCaptureImage(GraphicUtils.getClone(_video));
 		}
 
 		protected function showCaptureMenu($add:Boolean = true):void {
