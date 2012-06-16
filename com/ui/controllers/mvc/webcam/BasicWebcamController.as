@@ -193,22 +193,23 @@ package com.ui.controllers.mvc.webcam {
     	 * @param $videoHight
     	 * @param $fps
     	 */
-        protected function initializeCamera($videoWidth:uint, $videoHight:Number, $fps:uint):void {
-        	if(Capabilities.os.indexOf("Mac")>-1){
-				modelW.webCamera = Camera.getCamera("2");
-        	} else {
-        		modelW.webCamera = Camera.getCamera();
-        	}
-       		if(!modelW.webCamera) {
-       			_model.setError(BasicWebcamStates.ON_CAMERA_ERROR);
-       			return;
-       		}
-		    modelW.webCamera.setMode(modelW.videoWidth, modelW.videoHeight, modelW.fps);
-		    modelW.webCamera.setQuality(0, modelW.videoQuality);
+		protected var _cameraTry:uint = 0;
 
+		protected function initializeCamera($videoWidth:uint, $videoHeight:Number, $fps:uint):void {
+			modelW.webCamera = Camera.getCamera(_cameraTry.toString());
+			if(!modelW.webCamera) {
+				if(_cameraTry < Camera.names.length) {
+					_cameraTry++;
+					initializeCamera($videoWidth, $videoHeight, $fps);
+				} else {
+					_model.setError(BasicWebcamStates.ON_CAMERA_ERROR);
+				}
+				return;
+			}
+			modelW.webCamera.setMode(modelW.videoWidth, modelW.videoHeight, modelW.fps);
+			modelW.webCamera.setQuality(0, modelW.videoQuality);
 			trace("Acceso a la camara.");
 			connectedCamera();
-
 		}
 
         protected function connectedCamera():void {
