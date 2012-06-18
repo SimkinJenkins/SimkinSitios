@@ -30,6 +30,10 @@ package com.graphic {
 			super();
 		}
 
+		public function set registerPoint($value:ComplexPoint):void {
+			setRegisterPoint($value);
+		}
+
 		override protected function initialize():void {
 			super.initialize();
 			_rotationSprite = new Sprite();
@@ -126,7 +130,6 @@ package com.graphic {
 		}
 
 		override protected function doResize():void {
-			trace("doResize");
 			var referencePoint:ComplexPoint = getReferencePoint((_currentButton as BasicDynamicSpriteButton).type);
 			var dragPoint:ComplexPoint = new ComplexPoint(this.mouseX, this.mouseY);
 			var referencePointR:ComplexPoint = referencePoint.rotateAxisPoint(_rotation, _registerPoint);
@@ -150,7 +153,6 @@ package com.graphic {
 		}
 
 		protected function doRotate():void {
-			trace("doRotate");
 			var mousePoint:ComplexPoint = new ComplexPoint(this.mouseX, this.mouseY);
 			_rotation = _lastRotation - (_startingAngle - mousePoint.getAngle(_registerPoint));
 			bounds = _bounds;

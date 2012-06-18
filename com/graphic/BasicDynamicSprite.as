@@ -29,6 +29,7 @@ package com.graphic {
 		protected var _currentAction:String = INACTIVE;
 		protected var _limits:Rectangle;
 		protected var _container:Sprite;
+		protected var _registerPointSetted:Boolean = false;
 
 		override public function set filters($value:Array):void {
 			_container.filters = $value;
@@ -50,6 +51,10 @@ package com.graphic {
 
 		override public function get y():Number {
 			return _bounds.y;
+		}
+
+		public function get controlsContainer():Sprite {
+			return _controlsContainer;
 		}
 
 		public function set limits($value:Rectangle):void {
@@ -206,8 +211,15 @@ package com.graphic {
 			return $bounds.height;
 		}
 
-		protected function setRegisterPoint():void {
-			_registerPoint = new ComplexPoint(_bounds.x + (_bounds.width / 2), _bounds.y + (_bounds.height / 2));
+		protected function setRegisterPoint($value:ComplexPoint = null):void {
+			if($value) {
+				_registerPoint = $value;
+				_registerPointSetted = true;
+			} else {
+				if(!_registerPointSetted) {
+					_registerPoint = new ComplexPoint(_bounds.x + (_bounds.width / 2), _bounds.y + (_bounds.height / 2));
+				}
+			}
 		}
 
 	}

@@ -204,6 +204,7 @@ package com.ui.controllers.mvc.webcam {
 					initializeCamera($videoWidth, $videoHeight, $fps);
 				} else {
 					_model.setError(BasicWebcamStates.ON_CAMERA_ERROR);
+					_model.setState(BasicFormStates.CANCELING);
 				}
 				return;
 			}
