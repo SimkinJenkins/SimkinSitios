@@ -14,16 +14,19 @@ package com.ui.controllers.mvc.userpicture.views {
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
+	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.media.Video;
-	
+	import flash.utils.Timer;
+
 	public class StandardWebcamView extends BasicWebcamView implements IView {
 
 		protected var _preview:Sprite;
 		protected var _previewMask:Sprite;
 		protected var _webCamContainerPosition:Point;
 		protected var _webCamPreviewPosition:Point;
-		
+		protected var _captureTimer:Timer;
+
 		public function set webCamContainerPosition($value:Point):void {
 			_webCamContainerPosition = $value;
 		}
@@ -48,6 +51,10 @@ package com.ui.controllers.mvc.userpicture.views {
 
 		override protected function get captureImageButton():InteractiveObject {
 			return graphicMC.captureImageButton;
+		}
+
+		protected function get counter():MovieClip {
+			return graphicMC.counter;
 		}
 
 		protected function get videoMask():DisplayObject {
@@ -79,6 +86,7 @@ package com.ui.controllers.mvc.userpicture.views {
 		}
 
 		public function init():void {
+			counter.visible = false;
 			formController.clickHandler(BasicWebcamStates.ON_CAMERA_STARTING);
 		}
 
@@ -104,60 +112,15 @@ package com.ui.controllers.mvc.userpicture.views {
 			addButtonListeners();
 		}
 
-		override protected function addVideo($video:Video, $add:Boolean = true):void {
-			super.addVideo($video, $add);
-		}
-
-		override protected function onCaptureAgain():void {
-			super.onCaptureAgain();
-			if(_preview) {
-				addElement(wcModel.capturedImage, false, (_preview as MovieClip).content);
-			} else if(videoContainer) {
-				addElement(wcModel.capturedImage, false, videoContainer);
-			} else {
-				addElement(wcModel.capturedImage, false);
-			}	
-			if(_previewMask){
-				wcModel.capturedImage.mask = _previewMask;
-			}else{
-				wcModel.capturedImage.mask = null;
+		override protected function onCameraReady():void {
+			super.onCameraReady();
+			if(wcModel.automaticStart) {
+				onCaptureRequest(null);
 			}
-			addVideo(_video);
 		}
 
 		override protected function onImageCaptured():void {
 			formController.clickHandler(BasicFormStates.ON_FINISH_BTN);
-			return;
-			super.onImageCaptured();
-			_video.visible = false;
-			if(_preview) {
-				wcModel.capturedImage.x = _webCamContainerPosition.x;
-				wcModel.capturedImage.y = _webCamContainerPosition.y;
-				if(_preview as MovieClip) {
-					addElement(wcModel.capturedImage, true, (_preview as MovieClip).content);
-				} else {
-					addElement(wcModel.capturedImage, true, _preview);
-				}
-				if(_previewMask){
-					wcModel.capturedImage.mask = _previewMask;
-				}else{
-					wcModel.capturedImage.mask = (_preview as MovieClip).content._mask;
-				}
-			} else if(videoContainer) {
-				wcModel.capturedImage.x = 0;
-				wcModel.capturedImage.width = _video.width;
-				wcModel.capturedImage.height = _video.height;
-				addElement(wcModel.capturedImage, true, videoContainer);
-				if(_previewMask){
-					videoContainer.mask = _previewMask;
-				}else{
-					videoContainer.mask = videoMask;
-				}
-			} else {
-				addElement(wcModel.capturedImage);
-				wcModel.capturedImage.x = _webCamContainerPosition.x;
-				wcModel.capturedImage.y = _webCamContainerPosition.y;
-			}
 		}
 
 		override protected function getButtonID($button:InteractiveObject):String {
@@ -186,7 +149,40 @@ package com.ui.controllers.mvc.userpicture.views {
 
 		override protected function onCaptureRequest($event:MouseEvent):void {
 			_video.mask = null;
-			super.onCaptureRequest($event);
+			setCaptureTimer();
+		}
+
+		protected function setCaptureTimer():void {
+			_captureTimer = new Timer(1000, 3);
+			addTimerListeners();
+			_captureTimer.start();
+			counter.visible = true;
+			counter.gotoAndStop("l" + (3 - _captureTimer.currentCount));
+		}
+
+		protected function destructTimer():void {
+			if(_captureTimer) {
+				if(_captureTimer.running) {
+					_captureTimer.stop();
+				}
+				addTimerListeners(false);
+				_captureTimer = null;
+			}
+		}
+
+		protected function addTimerListeners($add:Boolean = true):void {
+			addListener(_captureTimer, TimerEvent.TIMER, onTimer, $add);
+			addListener(_captureTimer, TimerEvent.TIMER_COMPLETE, onTimerComplete, $add);
+		}
+
+		protected function onTimer($event:TimerEvent):void {
+			if(_captureTimer.currentCount != 3) {
+				counter.gotoAndStop("l" + (3 - _captureTimer.currentCount));
+			}
+		}
+
+		protected function onTimerComplete($event:TimerEvent):void {
+			super.onCaptureRequest(null);
 		}
 
 		protected function addButtonListeners($add:Boolean = true):void {

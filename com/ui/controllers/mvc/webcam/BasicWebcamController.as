@@ -56,12 +56,7 @@ package com.ui.controllers.mvc.webcam {
 		}
 
 		override protected function onCancelRequest():void {
-//			if(modelW.capturedImage) {
-//				modelW.setState(BasicWebcamStates.ON_CAPTURE_AGAIN);
-//				modelW.capturedImage = null;
-//			} else {
-				super.onCancelRequest();
-//			}
+			super.onCancelRequest();
 		}
 
 		protected function showSettings($panel:String):void {

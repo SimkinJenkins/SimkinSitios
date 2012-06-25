@@ -14,6 +14,7 @@ package com.ui.controllers.mvc.webcam {
 	public class BasicWebcamModel extends BasicModel implements IModel {
 
 		protected var _videoContainer:DisplayObjectContainer;
+		protected var _automaticStart:Boolean = false;
     	protected var _serverURL:String = null;
     	protected var _fileName:String = null;
     	protected var _capturedImage:DisplayObject;
@@ -25,6 +26,14 @@ package com.ui.controllers.mvc.webcam {
         protected var _micEnabled:Boolean = true;
 		protected var _videoQuality:Number = 90;
 		protected var _webCamera:Camera;
+
+		public function set automaticStart($value:Boolean):void {
+			_automaticStart = $value;
+		}
+
+		public function get automaticStart():Boolean {
+			return _automaticStart;
+		}
 
 		public function set videoContainer($value:DisplayObjectContainer):void {
 			_videoContainer = $value;

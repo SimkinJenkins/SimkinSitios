@@ -53,6 +53,10 @@ package com.graphic {
 			return _bounds.y;
 		}
 
+		override public function get numChildren():int {
+			return _container.numChildren;
+		}
+
 		public function get controlsContainer():Sprite {
 			return _controlsContainer;
 		}
@@ -108,6 +112,10 @@ package com.graphic {
 				initBounds();
 			}
 			return child;
+		}
+
+		override public function getChildAt($index:int):DisplayObject {
+			return _container.getChildAt($index);
 		}
 
 		public function destruct():void {
