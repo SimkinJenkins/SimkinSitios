@@ -4,8 +4,10 @@ package com.graphic {
 	
 	import flash.display.InteractiveObject;
 	import flash.display.Sprite;
+	import flash.events.MouseEvent;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.globalization.LastOperationStatus;
 
 	public class RotatableDynamicSprite extends ResizableDynamicSprite {
 
@@ -15,23 +17,35 @@ package com.graphic {
 		protected var _rotation:Number = 0;
 		protected var _lastRotation:Number = 0;
 		protected var _startingAngle:Number = 0;
-		protected var _initButtonPos:ComplexPoint;
+
+		protected var _rotatePoint:ComplexPoint;
+		protected var _updateRotateContainer:Boolean = true;
+		protected var _lastContainerDelta:ComplexPoint = new ComplexPoint();
+		protected var _lastRotationContainer:Number = 0;
 
 		override public function get rotation():Number {
 			return _rotation;
 		}
 
 		override public function set rotation($value:Number):void {
-			_rotation = $value;
+			_updateRotateContainer = true;
+			_currentAction = ROTATING;
+			_rotation = $value - _lastRotationContainer;
 			bounds = _bounds;
+		}
+
+		public function set rotateRegister($value:ComplexPoint):void {
+			_rotatePoint = $value;
 		}
 
 		public function RotatableDynamicSprite() {
 			super();
 		}
 
-		public function set registerPoint($value:ComplexPoint):void {
-			setRegisterPoint($value);
+		public function endManualRotation():void {
+			_lastAction = ROTATING;
+			_currentAction = INACTIVE;
+			endRotation();
 		}
 
 		override protected function initialize():void {
@@ -68,39 +82,44 @@ package com.graphic {
 
 		override protected function setStartingPoint():void {
 			super.setStartingPoint();
+			_updateRotateContainer = true;
 			if(_currentAction == ROTATING) {
+				_updateRotateContainer = true;
 				var currentButtonPosition:ComplexPoint = (_currentButton as BasicDynamicSpriteButton).position;
 				_lastRotation = _rotation;
-				_startingAngle = currentButtonPosition.getAngle(_registerPoint);
+				_startingAngle = currentButtonPosition.getAngle(getRotationPoint());
 			}
 		}
 
-
 		override protected function drawBorder():void {
-			if(getButtonAt(0) && getButtonAt(0).position) {
+			if(_cornerPositions && _cornerPositions.length > 1) {
 				_borderContainer.graphics.clear();
 				_borderContainer.graphics.lineStyle(3, 0x000000, .5);
-				var p0:ComplexPoint = (new ComplexPoint(_bounds.left, _bounds.top)).rotateAxisPoint(-_rotation, _registerPoint);
-				var p1:ComplexPoint = (new ComplexPoint(_bounds.right, _bounds.top)).rotateAxisPoint(-_rotation, _registerPoint);
-				var p2:ComplexPoint = (new ComplexPoint(_bounds.right, _bounds.bottom)).rotateAxisPoint(-_rotation, _registerPoint);
-				var p3:ComplexPoint = (new ComplexPoint(_bounds.left, _bounds.bottom)).rotateAxisPoint(-_rotation, _registerPoint);
-				_borderContainer.graphics.moveTo(p0.x, p0.y);
-				_borderContainer.graphics.lineTo(p1.x, p1.y);
-				_borderContainer.graphics.lineTo(p2.x, p2.y);
-				_borderContainer.graphics.lineTo(p3.x, p3.y);
-				_borderContainer.graphics.lineTo(p0.x, p0.y);
+				_borderContainer.graphics.moveTo(_cornerPositions[0].x, _cornerPositions[0].y);
+				_borderContainer.graphics.lineTo(_cornerPositions[1].x, _cornerPositions[1].y);
+				_borderContainer.graphics.lineTo(_cornerPositions[2].x, _cornerPositions[2].y);
+				_borderContainer.graphics.lineTo(_cornerPositions[3].x, _cornerPositions[3].y);
+				_borderContainer.graphics.lineTo(_cornerPositions[0].x, _cornerPositions[0].y);
 			} else {
 				super.drawBorder();
 			}
 		}
 
-
 		override protected function updateCornerButtons():void {
 			super.updateCornerButtons();
 			for(var i:uint = 0; i < 4; i++) {
-				var button:BasicDynamicSpriteButton = getButtonAt(i);
-				button.position = button.position.rotateAxisPoint(-_rotation, _registerPoint);
-				button.rotation = _rotation;
+				if(_currentAction == ROTATING) {
+					_cornerPositions[i] = (_cornerPositions[i] as ComplexPoint).rotateAxisPoint(-_rotation, getRotationPoint());
+				} else {
+					_cornerPositions[i] = (_cornerPositions[i] as ComplexPoint).rotateAxisPoint(-_rotation, _registerPoint);
+				}
+			}
+		}
+
+		override protected function updateButtonPosition():void {
+			super.updateButtonPosition();
+			for(var i:uint = 0; i < 4; i++) {
+				getButtonAt(i).rotation = _rotation;
 			}
 		}
 
@@ -108,18 +127,22 @@ package com.graphic {
 			super.doInactive();
 			_startingAngle = 0;
 			_lastRotation = 0;
-			_initButtonPos = null;
 		}
 
 		override protected function updateContainerBounds():void {
 			super.updateContainerBounds();
-			_container.rotation = _rotation;
-			var containerPos:ComplexPoint = (new ComplexPoint(_bounds.x, _bounds.y)).rotateAxisPoint(-_rotation, _registerPoint);
-			_container.x = containerPos.x;
-			_container.y = containerPos.y;
+			_container.rotation = _rotation + _lastRotationContainer;
+			if(_cornerPositions && _cornerPositions.length > 1) {
+				var register:ComplexPoint = new ComplexPoint(_cornerPositions[0].x  + ((_cornerPositions[2].x - _cornerPositions[0].x) / 2),
+					_cornerPositions[0].y  + ((_cornerPositions[2].y - _cornerPositions[0].y) / 2));
+				var position:ComplexPoint = (_cornerPositions[0] as ComplexPoint).rotateAxisPoint(-_lastRotationContainer, register);
+				_lastContainerDelta = new ComplexPoint(position.x - _container.x, position.y - _container.y);
+				_container.x = position.x;
+				_container.y = position.y;
+			}
 		}
 
-		override protected function getCurrentPosition($type:String, $width:Number, $height:Number):com.geom.ComplexPoint {
+		override protected function getCurrentPosition($type:String, $width:Number, $height:Number):ComplexPoint {
 			switch($type) {
 				case ResizableDynamicSpriteButton.TOP_LEFT:			return new ComplexPoint(this.mouseX, this.mouseY).rotateAxisPoint(_rotation, _registerPoint);
 				case ResizableDynamicSpriteButton.TOP_RIGHT:		return (new ComplexPoint(this.mouseX, this.mouseY)).rotateAxisPoint(_rotation, _registerPoint).moveToPolar($width, -180);
@@ -137,9 +160,38 @@ package com.graphic {
 			var currentPosition:ComplexPoint = getCurrentPosition((_currentButton as BasicDynamicSpriteButton).type, Math.abs(dragPointR.x - referencePointR.x), Math.abs(dragPointR.y - referencePointR.y));
 			var newBounds:Rectangle = new Rectangle(currentPosition.x, currentPosition.y, Math.abs(dragPointR.x - referencePointR.x), Math.abs(dragPointR.y - referencePointR.y));
 			var newReference:ComplexPoint = (new ComplexPoint(newBounds.x + (newBounds.width / 2), newBounds.y + (newBounds.height / 2)));
-			var newPostion:ComplexPoint = getBoundsCorner(newBounds, (_currentButton as BasicDynamicSpriteButton).type).rotateAxisPoint(-_rotation, newReference);
-			var delta:ComplexPoint = newPostion.clonePoint().minus(dragPoint);
-			bounds = new Rectangle(newBounds.x - delta.x, newBounds.y - delta.y, newBounds.width, newBounds.height);;
+			var newPosition:ComplexPoint = getBoundsCorner(newBounds, (_currentButton as BasicDynamicSpriteButton).type).rotateAxisPoint(-_rotation, newReference);
+			var delta:ComplexPoint = newPosition.clonePoint().minus(dragPoint);
+			bounds = new Rectangle(newBounds.x - delta.x, newBounds.y - delta.y, newBounds.width, newBounds.height);
+		}
+
+		override protected function onButtonMouseUp($event:MouseEvent):void {
+			super.onButtonMouseUp($event);
+			endRotation();
+		}
+
+		protected function endRotation():void {
+			if(_rotatePoint) {
+				if(_lastAction == ROTATING) {
+					correctBounds();
+				}
+			}
+		}
+
+		protected function correctBounds():void {
+			var register:ComplexPoint = new ComplexPoint(_cornerPositions[0].x  + ((_cornerPositions[2].x - _cornerPositions[0].x) / 2),
+														_cornerPositions[0].y  + ((_cornerPositions[2].y - _cornerPositions[0].y) / 2));
+			var correctedPos:ComplexPoint = (_cornerPositions[0] as ComplexPoint).rotateAxisPoint(_rotation, register);
+			bounds = new Rectangle(correctedPos.x, correctedPos.y, _bounds.width, _bounds.height);
+			_lastRotationContainer = _container.rotation;
+			_rotation = 0;
+			_updateRotateContainer = false;
+		}
+
+		protected function drawPoint($point:ComplexPoint, $color:uint):void {
+			_controlsContainer.graphics.lineStyle(3, $color);
+			_controlsContainer.graphics.drawCircle($point.x, $point.y, 5);
+			_controlsContainer.graphics.endFill();
 		}
 
 		protected function getBoundsCorner($bounds:Rectangle, $type:String):ComplexPoint {
@@ -154,8 +206,12 @@ package com.graphic {
 
 		protected function doRotate():void {
 			var mousePoint:ComplexPoint = new ComplexPoint(this.mouseX, this.mouseY);
-			_rotation = _lastRotation - (_startingAngle - mousePoint.getAngle(_registerPoint));
+			_rotation = _lastRotation - (_startingAngle - mousePoint.getAngle(getRotationPoint()));
 			bounds = _bounds;
+		}
+
+		protected function getRotationPoint():ComplexPoint {
+			return _rotatePoint ? _rotatePoint : _registerPoint;
 		}
 
 	}

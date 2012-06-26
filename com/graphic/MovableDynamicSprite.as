@@ -30,7 +30,6 @@ package com.graphic {
 
 		override public function set bounds($value:Rectangle):void {
 			super.bounds = $value;
-			updateMoveButton();
 		}
 
 		public function set controlsAutoHide($value:Boolean):void {
@@ -80,6 +79,11 @@ package com.graphic {
 				case _moveButton:		return MOVING;
 			}
 			return super.getCurrentAction($io);
+		}
+
+		override protected function updateAfterSetBounds():void {
+			super.updateAfterSetBounds();
+			updateMoveButton();
 		}
 
 		protected function drawButtons():void {
@@ -180,7 +184,9 @@ package com.graphic {
 		}
 
 		protected function onFadeTimerComplete($event:TimerEvent):void {
-			showControls(false);
+			if(_controlsAutoHide) {
+				showControls(false);
+			}
 		}
 
 		protected function addDragListeners($element:InteractiveObject, $down:Boolean = true, $destruct:Boolean = false):void {

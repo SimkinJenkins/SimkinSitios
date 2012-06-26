@@ -13,11 +13,11 @@ package com.graphic {
 		public static const RESIZING:String = "resizing";
 
 		protected var _cornersButtons:Array;
+		protected var _cornerPositions:Array;
 		protected var _buttonSize:Number = 16;
 
 		override public function set bounds($value:Rectangle):void {
 			super.bounds = $value;
-			updateCornerButtons();
 		}
 
 		public function ResizableDynamicSprite() {
@@ -51,9 +51,16 @@ package com.graphic {
 			destructButtons();
 		}
 
+		override protected function updateAfterSetBounds():void {
+			updateCornerButtons();
+			updateButtonPosition();
+			super.updateAfterSetBounds();
+		}
+
 		override protected function initialize():void {
 			super.initialize();
 			_cornersButtons = new Array();
+			_cornerPositions = new Array();
 		}
 
 		override protected function drawButtons():void {
@@ -119,10 +126,16 @@ package com.graphic {
 		}
 
 		protected function updateCornerButtons():void {
-			getButtonAt(0).position = new ComplexPoint(_bounds.x, _bounds.y);
-			getButtonAt(1).position = new ComplexPoint(_bounds.right, _bounds.y)
-			getButtonAt(2).position = new ComplexPoint(_bounds.right, _bounds.bottom)
-			getButtonAt(3).position = new ComplexPoint(_bounds.x, _bounds.bottom);
+			_cornerPositions[0] = new ComplexPoint(_bounds.x, _bounds.y);
+			_cornerPositions[1] = new ComplexPoint(_bounds.right, _bounds.y);
+			_cornerPositions[2] = new ComplexPoint(_bounds.right, _bounds.bottom);
+			_cornerPositions[3] = new ComplexPoint(_bounds.x, _bounds.bottom);
+		}
+
+		protected function updateButtonPosition():void {
+			for(var i:uint = 0; i < 4; i++) {
+				getButtonAt(i).position = _cornerPositions[i];
+			}
 		}
 
 		protected function getInteractiveButton($type:String):InteractiveObject {
@@ -179,10 +192,10 @@ package com.graphic {
 
 		protected function getReferencePoint($type:String):ComplexPoint {
 			switch($type) {
-				case ResizableDynamicSpriteButton.TOP_LEFT:			return getButton(ResizableDynamicSpriteButton.BOTTOM_RIGHT).position;
-				case ResizableDynamicSpriteButton.TOP_RIGHT:		return getButton(ResizableDynamicSpriteButton.BOTTOM_LEFT).position;
-				case ResizableDynamicSpriteButton.BOTTOM_LEFT:		return getButton(ResizableDynamicSpriteButton.TOP_RIGHT).position;
-				case ResizableDynamicSpriteButton.BOTTOM_RIGHT:		return getButton(ResizableDynamicSpriteButton.TOP_LEFT).position;
+				case ResizableDynamicSpriteButton.TOP_LEFT:			return _cornerPositions[2];
+				case ResizableDynamicSpriteButton.TOP_RIGHT:		return _cornerPositions[3];
+				case ResizableDynamicSpriteButton.BOTTOM_LEFT:		return _cornerPositions[1];
+				case ResizableDynamicSpriteButton.BOTTOM_RIGHT:		return _cornerPositions[0];
 			}
 			return new ComplexPoint();
 		}

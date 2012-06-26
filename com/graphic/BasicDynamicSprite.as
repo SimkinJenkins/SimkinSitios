@@ -25,11 +25,10 @@ package com.graphic {
 		protected var _originBounds:Rectangle;
 		protected var _registerPoint:ComplexPoint;
 		protected var _borderColor:uint = 0x324532;
-//		protected var _fillColor:uint = 0xADBC34;
 		protected var _currentAction:String = INACTIVE;
+		protected var _lastAction:String = INACTIVE;
 		protected var _limits:Rectangle;
 		protected var _container:Sprite;
-		protected var _registerPointSetted:Boolean = false;
 
 		override public function set filters($value:Array):void {
 			_container.filters = $value;
@@ -83,7 +82,7 @@ package com.graphic {
 			}
 			trace("bounds :: " + $value);
 			setRegisterPoint();
-			updateContainerBounds();
+			updateAfterSetBounds();
 			drawBorder();
 		}
 
@@ -126,6 +125,10 @@ package com.graphic {
 			_borderContainer = null;
 		}
 
+		protected function updateAfterSetBounds():void {
+			updateContainerBounds();
+		}
+
 		protected function doCurrentAction():void {
 			switch(_currentAction) {
 				case INACTIVE:		doInactive();		break;
@@ -158,6 +161,7 @@ package com.graphic {
 		protected function setCurrentAction($io:InteractiveObject = null):void {
 			var newState:String = getCurrentAction($io);
 			if(_currentAction != newState) {
+				_lastAction = _currentAction;
 				_currentAction = newState;
 				dispatchEvent(new StageEvent(ON_STATUS_CHANGE, _currentAction));
 			}
@@ -168,7 +172,6 @@ package com.graphic {
 		}
 
 		protected function doInactive():void {
-			cleanRegisterPoint();
 			trace("doInactive");
 		}
 
@@ -180,12 +183,6 @@ package com.graphic {
 			_borderContainer.graphics.lineTo(_bounds.right, _bounds.bottom);
 			_borderContainer.graphics.lineTo(_bounds.left, _bounds.bottom);
 			_borderContainer.graphics.lineTo(_bounds.left, _bounds.top);
-
-			if(_registerPoint) {
-				_borderContainer.graphics.beginFill(0x234ABC, 1);
-				_borderContainer.graphics.drawCircle(_registerPoint.x, _registerPoint.y, 3);
-				_borderContainer.graphics.endFill();
-			}
 		}
 
 		protected function getValidBounds($bounds:Rectangle):Rectangle {
@@ -220,20 +217,8 @@ package com.graphic {
 			return $bounds.height;
 		}
 
-		public function cleanRegisterPoint():void {
-			_registerPointSetted = false;
-			setRegisterPoint();
-		}
-
-		protected function setRegisterPoint($value:ComplexPoint = null):void {
-			if($value) {
-				_registerPoint = $value;
-				_registerPointSetted = true;
-			} else {
-				if(!_registerPointSetted) {
-					_registerPoint = new ComplexPoint(_bounds.x + (_bounds.width / 2), _bounds.y + (_bounds.height / 2));
-				}
-			}
+		protected function setRegisterPoint():void {
+			_registerPoint = new ComplexPoint(_bounds.x + (_bounds.width / 2), _bounds.y + (_bounds.height / 2));
 		}
 
 	}
