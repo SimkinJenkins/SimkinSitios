@@ -168,6 +168,7 @@ package com.graphic {
 		}
 
 		protected function doInactive():void {
+			cleanRegisterPoint();
 			trace("doInactive");
 		}
 
@@ -217,6 +218,11 @@ package com.graphic {
 
 		protected function getValidHeight($bounds:Rectangle):Number {
 			return $bounds.height;
+		}
+
+		public function cleanRegisterPoint():void {
+			_registerPointSetted = false;
+			setRegisterPoint();
 		}
 
 		protected function setRegisterPoint($value:ComplexPoint = null):void {
