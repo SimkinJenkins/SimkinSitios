@@ -195,10 +195,12 @@ package com.graphic {
 		}
 
 		protected function updateContainerBounds():void {
-			_container.x = _bounds.x;
-			_container.y = _bounds.y;
-			_container.scaleX = _bounds.width / _originBounds.width;
-			_container.scaleY = _bounds.height / _originBounds.height;
+			if(_container) {
+				_container.x = _bounds.x;
+				_container.y = _bounds.y;
+				_container.scaleX = _bounds.width / _originBounds.width;
+				_container.scaleY = _bounds.height / _originBounds.height;
+			}
 		}
 
 		protected function getValidX($bounds:Rectangle):Number {

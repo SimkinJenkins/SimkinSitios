@@ -40,6 +40,7 @@ package com.ui.controllers.mvc.fbpicture {
 		public static const FRIEND_PHOTOS_LOADED:String = "friendPhotosLoaded";
 		
 		// Albums Request
+		public static const ALBUM_DATA_LOADED:String = "albumDataLoaded";
 		public static const ALBUMS_LOADED:String = "albumsLoaded";
 		public static const ALBUMS_LOADED_EMPTY:String = "albumsLoadEmpty";
 		public static const ALBUMS_LOAD_ERROR:String = "albumsLoadError";

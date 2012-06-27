@@ -1,13 +1,12 @@
 package com.graphic {
 
 	import com.geom.ComplexPoint;
-	
+
 	import flash.display.InteractiveObject;
 	import flash.display.Sprite;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
-	import flash.globalization.LastOperationStatus;
 
 	public class RotatableDynamicSprite extends ResizableDynamicSprite {
 

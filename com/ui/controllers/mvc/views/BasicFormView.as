@@ -41,8 +41,8 @@ package com.ui.controllers.mvc.views {
 		}
 
 		override public function destructor():void {
-			buttonDestructor(_finishButton);
-			buttonDestructor(_cancelButton);
+			buttonDestructor(finishButton);
+			buttonDestructor(cancelButton);
 			formController.destructor();
 			super.destructor();
 		}
